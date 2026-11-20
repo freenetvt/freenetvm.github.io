@@ -1,0 +1,168 @@
+name: Update Subscription Pool
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Fetch, tag and clean configs
+        run: |
+          python3 -c '
+          import urllib.request, base64, json, re, html
+          from urllib.parse import unquote, quote
+
+          RAW_LINKS = [
+              "https://t.me/meliproxyy",
+              "https://shadowmere.xyz/api/b64sub/",
+              "https://cdn.jsdelivr.net/gh/proxyscrape/free-proxy-list@main/proxies/all/data.txt",
+              "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks5/data.txt",
+              "https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/all/data.txt",
+              "https://t.me/meliproxyy",
+              "https://t.me/vpnbak",
+              "https://t.me/v2ray_free_conf",
+              "https://t.me/Gp_config",
+              "https://t.me/V2rayuir",
+              "https://t.me/fastkanfig",
+              "https://t.me/oneclickvpnkeys",
+              "https://t.me/FreakConfig",
+              "https://t.me/+K4k8qWuVIxI1Y2I0",
+              "https://t.me/Masir_Sefid",
+              "https://t.me/configraygan",
+              "https://t.me/ettehad_vpn",
+          ]
+
+          SOURCES = list(dict.fromkeys(RAW_LINKS))
+
+          protocols = ("vmess://", "vless://", "trojan://", "ss://", "ssr://", "http://", "https://", "socks4://", "socks5://")
+
+          def normalize_source_url(url: str) -> tuple[str, str]:
+              m = re.match(r"^https?://t\.me/([A-Za-z0-9_]+)/?$", url.strip())
+              if m:
+                  return f"https://t.me/s/{m.group(1)}", "telegram"
+              if "protocols/socks5" in url:
+                  return url, "socks5_list"
+              if "proxyscrape" in url or "proxifly" in url:
+                  return url, "proxy_list"
+              return url, "sub"
+
+          def detect_flag(label: str) -> str:
+              m = re.search(r"[\U0001F1E6-\U0001F1FF]{2}", label or "")
+              if m:
+                  return m.group(0)
+              low = (label or "").lower()
+              mapping = [
+                  ("🇩🇪", ["germany", "deutschland", "frankfurt", "de", "آلمان"]),
+                  ("🇺🇸", ["united states", "usa", "us", "dallas", "los angeles", "new york", "آمریکا", "ایالات متحده"]),
+                  ("🇳🇱", ["netherlands", "amsterdam", "nl", "هلند"]),
+                  ("🇬🇧", ["united kingdom", "uk", "gb", "london", "انگلیس", "بریتانیا"]),
+                  ("🇫🇷", ["france", "paris", "fr", "فرانسه"]),
+                  ("🇨🇦", ["canada", "toronto", "beauharnois", "ca", "کانادا"]),
+                  ("🇹🇷", ["turkey", "istanbul", "tr", "ترکیه"]),
+                  ("🇫🇮", ["finland", "helsinki", "fi", "فنلاند"]),
+                  ("🇸🇪", ["sweden", "stockholm", "se", "سوئد"]),
+                  ("🇨🇭", ["switzerland", "zurich", "ch", "سوئیس"]),
+                  ("🇦🇪", ["uae", "emirates", "dubai", "ae", "امارات"]),
+                  ("🇷🇺", ["russia", "moscow", "ru", "روسیه"]),
+                  ("🇯🇵", ["japan", "tokyo", "jp", "ژاپن"]),
+                  ("🇸🇬", ["singapore", "sg", "سنگاپور"]),
+                  ("🇭🇰", ["hong kong", "hk", "هنگ کنگ"]),
+                  ("🇹🇼", ["taiwan", "tw", "تایوان"]),
+                  ("🇮🇷", ["iran", "tehran", "ir", "ایران"]),
+              ]
+              for flag, keys in mapping:
+                  for k in keys:
+                      if re.search(r"(^|[^a-z0-9_])" + re.escape(k) + r"([^a-z0-9_]|$)", low):
+                          return flag
+              return "🌐"
+
+          def tag_config(uri: str, fallback_label: str = "") -> str:
+              proto = uri.split("://", 1)[0].lower()
+              raw_label = fallback_label
+              if "#" in uri:
+                  raw_label = unquote(uri.split("#", 1)[1]) or fallback_label
+              if proto == "vmess":
+                  try:
+                      b64_part = uri.split("://", 1)[1].split("#", 1)[0]
+                      pad = "=" * ((4 - len(b64_part) % 4) % 4)
+                      data = json.loads(base64.b64decode(b64_part + pad).decode("utf-8", errors="ignore"))
+                      if not raw_label:
+                          raw_label = str(data.get("ps", ""))
+                      tag = f"{detect_flag(raw_label)} Freenetvt"
+                      data["ps"] = tag
+                      new_b64 = base64.b64encode(json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).decode("utf-8")
+                      return f"vmess://{new_b64}"
+                  except Exception:
+                      pass
+              tag = f"{detect_flag(raw_label)} Freenetvt"
+              base_uri = uri.split("#", 1)[0]
+              return f"{base_uri}#{quote(tag)}"
+
+          unique_configs = {}
+          for raw_url in SOURCES:
+              target_url, src_type = normalize_source_url(raw_url)
+              try:
+                  req = urllib.request.Request(target_url, headers={"User-Agent": "Mozilla/5.0"})
+                  with urllib.request.urlopen(req, timeout=20) as resp:
+                      content = resp.read().decode("utf-8", errors="ignore").strip()
+
+                      if src_type == "telegram":
+                          content = html.unescape(re.sub(r"<[^>]+>", "\n", content))
+                      elif "://" not in content and "." not in content[:40]:
+                          try:
+                              pad = "=" * ((4 - len(content) % 4) % 4)
+                              content = base64.b64decode(content + pad).decode("utf-8", errors="ignore")
+                          except Exception:
+                              pass
+
+                      matches = re.findall(r"(?:vmess|vless|trojan|ss|ssr|http|https|socks4|socks5)://[^\s<>\"\\]+", content)
+                      for line in matches:
+                          line = line.strip()
+                          if line.startswith(protocols):
+                              tagged = tag_config(line)
+                              unique_configs[tagged] = tagged
+
+                      if src_type in ("socks5_list", "proxy_list"):
+                          default_proto = "socks5" if src_type == "socks5_list" else "http"
+                          for line in content.splitlines():
+                              line = line.strip()
+                              if re.match(r"^\d{1,3}(?:\.\d{1,3}){3}:\d{2,5}$", line):
+                                  uri = f"{default_proto}://{line}"
+                                  tagged = tag_config(uri, line)
+                                  unique_configs[tagged] = tagged
+
+              except Exception as e:
+                  print(f"Skip {raw_url}: {e}")
+
+          sorted_list = sorted(unique_configs.keys())
+          with open("sub.txt", "w", encoding="utf-8") as f:
+              f.write("\n".join(sorted_list))
+
+          b64_data = base64.b64encode("\n".join(sorted_list).encode("utf-8")).decode("utf-8")
+          with open("sub_b64.txt", "w", encoding="utf-8") as f:
+              f.write(b64_data)
+
+          print(f"Total unique configs saved: {len(sorted_list)}")
+          '
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add sub.txt sub_b64.txt
+          git diff --staged --quiet || (git commit -m "chore: update subscription pool" && git push)
