@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ShadowShare | پنل V2Ray و تست پینگ</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #161829;
+            color: #ffffff;
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: 90px;
+        }
+        .card-vmess { background: linear-gradient(145deg, #3b3066 0%, #24213e 100%); border: 1px solid rgba(139, 92, 246, 0.25); }
+        .card-ss { background: linear-gradient(145deg, #3c3168 0%, #24213e 100%); border: 1px solid rgba(139, 92, 246, 0.25); }
+        .card-vless { background: linear-gradient(145deg, #1b4d4e 0%, #1d2c3b 100%); border: 1px solid rgba(16, 185, 129, 0.25); }
+        .card-trojan { background: linear-gradient(145deg, #522949 0%, #2b2038 100%); border: 1px solid rgba(236, 72, 153, 0.25); }
+        .card-dark { background-color: #212438; border: 1px solid rgba(255, 255, 255, 0.06); }
+        .server-card { background-color: #22253b; border: 1px solid rgba(255, 255, 255, 0.06); }
+        .card-tips { background: linear-gradient(90deg, #332c39 0%, #262538 100%); border: 1px solid rgba(245, 158, 11, 0.2); }
+        .tap-effect { transition: transform 0.15s ease, opacity 0.15s ease; }
+        .tap-effect:active { transform: scale(0.97); opacity: 0.92; }
+        .fab-telegram {
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .fab-telegram:hover {
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 14px 28px rgba(2, 132, 199, 0.55);
+        }
+        .fab-telegram:active {
+            transform: scale(0.94);
+        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #161829; }
+        ::-webkit-scrollbar-thumb { background: #3b3066; border-radius: 10px; }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen select-none">
+
+    <!-- ==================== صفحه اصلی ==================== -->
+    <div id="home-view">
+        <header class="flex items-center justify-between px-5 pt-6 pb-4">
+            <div class="flex items-center gap-3">
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide text-white leading-tight">ShadowShare</h1>
+                    <p class="text-xs text-gray-400 font-light" dir="ltr">Secure & Fast</p>
+                </div>
+                <button onclick="showToast('بخش اشتراک ویژه (VIP)')" class="tap-effect flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-amber-500/20">
+                    <i data-lucide="crown" class="w-3.5 h-3.5 fill-gray-900"></i>
+                    <span>دریافت VIP</span>
+                </button>
+            </div>
+
+            <button onclick="fetchAndParseConfigs(this)" class="tap-effect w-11 h-11 rounded-2xl card-dark flex items-center justify-center text-gray-300 hover:text-white">
+                <i data-lucide="rotate-cw" class="w-5 h-5 transition-transform duration-500"></i>
+            </button>
+        </header>
+
+        <main class="px-5 space-y-6">
+            <!-- وضعیت سرورها -->
+            <section onclick="openServerPage('ALL', 'همه سرورها')" class="tap-effect card-dark rounded-3xl p-4 flex items-center justify-between cursor-pointer">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <div class="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+                            <i data-lucide="check" class="w-5 h-5 stroke-[3]"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-base font-bold text-white"><span id="total-count">0</span> سرور موجود</div>
+                        <div class="text-xs text-gray-400 mt-0.5">آخرین به‌روزرسانی: <span id="last-update" dir="ltr">right now</span></div>
+                    </div>
+                </div>
+                <i data-lucide="chevron-left" class="w-5 h-5 text-gray-500"></i>
+            </section>
+
+            <!-- آمار ۳ ستونه -->
+            <section class="grid grid-cols-3 gap-3">
+                <div onclick="openServerPage('SECURE', 'استخر پروکسی امن')" class="tap-effect cursor-pointer card-dark rounded-2xl p-3.5 flex flex-col items-center justify-center text-center">
+                    <div class="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center mb-2">
+                        <i data-lucide="shield" class="w-5 h-5 fill-purple-500/40"></i>
+                    </div>
+                    <span class="text-lg font-bold text-white" id="secure-count">0</span>
+                    <span class="text-[11px] text-gray-400 mt-0.5">امنیت بالا</span>
+                </div>
+
+                <div onclick="openServerPage('PUBLIC', 'استخر پروکسی عمومی')" class="tap-effect cursor-pointer card-dark rounded-2xl p-3.5 flex flex-col items-center justify-center text-center">
+                    <div class="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center mb-2">
+                        <i data-lucide="server" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-lg font-bold text-white" id="public-count">0</span>
+                    <span class="text-[11px] text-gray-400 mt-0.5">عمومی</span>
+                </div>
+
+                <div onclick="openServerPage('FAV', 'علاقه‌مندی‌ها')" class="tap-effect cursor-pointer card-dark rounded-2xl p-3.5 flex flex-col items-center justify-center text-center">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center mb-2">
+                        <i data-lucide="star" class="w-5 h-5 fill-amber-400"></i>
+                    </div>
+                    <span class="text-lg font-bold text-white" id="fav-count">0</span>
+                    <span class="text-[11px] text-gray-400 mt-0.5">علاقه‌مندی‌ها</span>
+                </div>
+            </section>
+
+            <!-- استخر پروکسی امن -->
+            <section>
+                <div class="flex items-center justify-between mb-3.5">
+                    <h2 class="text-base font-bold text-white">استخر پروکسی امن</h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyAllConfigs()" title="کپی همه" class="tap-effect w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 flex items-center justify-center">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="copySubUrl()" title="کپی لینک سابسکریپشن" class="tap-effect w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 flex items-center justify-center">
+                            <i data-lucide="link" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3.5">
+                    <div onclick="openServerPage('vmess', 'VMess')" class="tap-effect card-vmess rounded-3xl p-5 flex flex-col items-center justify-center text-center cursor-pointer relative">
+                        <span id="badge-vmess" class="absolute top-3 left-3 text-[10px] bg-black/30 px-2 py-0.5 rounded-full text-purple-200">0</span>
+                        <div class="w-12 h-12 rounded-2xl bg-purple-500/30 text-purple-300 flex items-center justify-center mb-3">
+                            <i data-lucide="key-round" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white" dir="ltr">VMess</h3>
+                        <span class="text-xs text-purple-200/60 mt-0.5" dir="ltr">V2Ray</span>
+                    </div>
+
+                    <div onclick="openServerPage('ss', 'Shadowsocks')" class="tap-effect card-ss rounded-3xl p-5 flex flex-col items-center justify-center text-center cursor-pointer relative">
+                        <span id="badge-ss" class="absolute top-3 left-3 text-[10px] bg-black/30 px-2 py-0.5 rounded-full text-indigo-200">0</span>
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-500/30 text-indigo-300 flex items-center justify-center mb-3">
+                            <i data-lucide="shield" class="w-6 h-6 fill-indigo-300/80"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white" dir="ltr">Shadowsocks</h3>
+                        <span class="text-xs text-indigo-200/60 mt-0.5" dir="ltr">SS</span>
+                    </div>
+
+                    <div onclick="openServerPage('vless', 'VLESS')" class="tap-effect card-vless rounded-3xl p-5 flex flex-col items-center justify-center text-center cursor-pointer relative">
+                        <span id="badge-vless" class="absolute top-3 left-3 text-[10px] bg-black/30 px-2 py-0.5 rounded-full text-emerald-200">0</span>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/25 text-emerald-300 flex items-center justify-center mb-3">
+                            <i data-lucide="shield-check" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white" dir="ltr">VLESS</h3>
+                        <span class="text-xs text-emerald-200/60 mt-0.5" dir="ltr">Xray</span>
+                    </div>
+
+                    <div onclick="openServerPage('trojan', 'Trojan')" class="tap-effect card-trojan rounded-3xl p-5 flex flex-col items-center justify-center text-center cursor-pointer relative">
+                        <span id="badge-trojan" class="absolute top-3 left-3 text-[10px] bg-black/30 px-2 py-0.5 rounded-full text-pink-200">0</span>
+                        <div class="w-12 h-12 rounded-2xl bg-pink-500/30 text-pink-300 flex items-center justify-center mb-3">
+                            <i data-lucide="lock" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-white" dir="ltr">Trojan</h3>
+                        <span class="text-xs text-pink-200/60 mt-0.5" dir="ltr">TLS</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- استخر پروکسی عمومی -->
+            <section>
+                <h2 class="text-base font-bold text-white mb-3.5">استخر پروکسی عمومی</h2>
+                <div class="grid grid-cols-3 gap-3">
+                    <div onclick="openServerPage('http', 'HTTP')" class="tap-effect card-dark rounded-2xl py-4 px-2 flex flex-col items-center justify-center text-center cursor-pointer relative">
+                        <span id="badge-http" class="absolute top-2 left-2 text-[9px] text-gray-400">0</span>
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center mb-2.5">
+                            <span class="text-[10px] font-extrabold border border-amber-400/50 rounded px-1 py-0.5">HTTP</span>
+                        </div>
+                        <span class="text-xs font-bold text-white" dir="ltr">HTTP</span>
+                    </div>
+
+                    <div onclick="openServerPage('https', 'HTTPS')" class="tap-effect card-dark rounded-2xl py-4 px-2 flex flex-col items-center justify-center text-center cursor-pointer relative">
+                        <span id="badge-https" class="absolute top-2 left-2 text-[9px] text-gray-400">0</span>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center mb-2.5">
+                            <i data-lucide="lock" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-xs font-bold text-white" dir="ltr">HTTPS</span>
+                    </div>
+
+                    <div onclick="openServerPage('socks4', 'SOCKS4')" class="tap-effect card-dark rounded-2xl py-4 px-2 flex flex-col items-center justify-center text-center cursor-pointer relative">
+                        <span id="badge-socks4" class="absolute top-2 left-2 text-[9px] text-gray-400">0</span>
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center mb-2.5">
+                            <i data-lucide="code-2" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-xs font-bold text-white" dir="ltr">SOCKS4</span>
+                    </div>
+
+                    <div onclick="openServerPage('socks5', 'SOCKS5')" class="tap-effect card-dark rounded-2xl py-4 px-2 flex flex-col items-center justify-center text-center cursor-pointer relative">
+                        <span id="badge-socks5" class="absolute top-2 left-2 text-[9px] text-gray-400">0</span>
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center mb-2.5">
+                            <i data-lucide="code-2" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-xs font-bold text-white" dir="ltr">SOCKS5</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- کارت نکات -->
+            <section class="card-tips rounded-2xl p-4 flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="lightbulb" class="w-5 h-5 fill-amber-400/80"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white">نکات</h4>
+                    <p class="text-xs text-gray-300 mt-0.5">قبل از استفاده سرورها را تست کنید</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ==================== صفحه لیست سرورها ==================== -->
+    <div id="servers-view" class="hidden min-h-screen">
+        <header class="sticky top-0 z-30 bg-[#161829]/95 backdrop-blur-md border-b border-white/5 px-4 py-4 flex items-center justify-between">
+            <button onclick="closeServerPage()" class="tap-effect flex items-center gap-1 text-sm font-bold text-white">
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                <span>بازگشت</span>
+            </button>
+
+            <div class="text-center">
+                <h2 id="page-servers-title" class="text-base font-bold text-white">لیست سرورها</h2>
+                <p id="page-servers-sub" class="text-[10px] text-gray-400">0 سرور</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="ping-all-btn" onclick="runPingTest()" title="تست پینگ سرورها" class="tap-effect flex items-center gap-1 px-2.5 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                    <i data-lucide="gauge" class="w-4 h-4"></i>
+                    <span>تست پینگ</span>
+                </button>
+                <button onclick="copyListConfigs()" title="کپی کامل" class="tap-effect flex items-center gap-1 px-2.5 h-9 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-200 text-xs font-bold">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                    <span>کپی کامل</span>
+                </button>
+            </div>
+        </header>
+
+        <div id="ping-summary-bar" class="hidden mx-4 mt-3 p-3 rounded-2xl bg-[#212438] border border-white/10 flex items-center justify-between text-xs">
+            <span id="ping-status-text" class="text-gray-300">در حال تست پینگ...</span>
+            <button onclick="toggleOnlyHealthy()" id="filter-healthy-btn" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold">
+                فقط سالم‌ها
+            </button>
+        </div>
+
+        <div id="servers-list-wrapper" class="p-4 space-y-3"></div>
+    </div>
+
+    <!-- ==================== صفحه ابزارها ==================== -->
+    <div id="tools-view" class="hidden min-h-screen">
+        <header class="sticky top-0 z-30 bg-[#161829]/95 backdrop-blur-md border-b border-white/5 px-4 py-4 flex items-center justify-between">
+            <button onclick="closeToolsPage()" class="tap-effect flex items-center gap-1 text-sm font-bold text-white">
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                <span>بازگشت</span>
+            </button>
+            <h2 class="text-base font-bold text-white">ابزارها</h2>
+            <div class="w-14"></div>
+        </header>
+
+        <main class="p-5 space-y-5">
+            <!-- ابزار تست پینگ کلودفلر -->
+            <section class="card-dark rounded-3xl p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                            <i data-lucide="cloud" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-white">تست پینگ کلودفلر</h3>
+                            <p class="text-[11px] text-gray-400 mt-0.5" dir="ltr">Cloudflare Edge Latency Test</p>
+                        </div>
+                    </div>
+                    <span id="cf-ping-badge" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-white/5 text-gray-300" dir="ltr">-- ms</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2.5 text-center">
+                    <div class="bg-[#161829] rounded-2xl p-3 border border-white/5">
+                        <div class="text-[10px] text-gray-400">کمترین</div>
+                        <div id="cf-min" class="text-sm font-bold text-emerald-400 mt-1" dir="ltr">--</div>
+                    </div>
+                    <div class="bg-[#161829] rounded-2xl p-3 border border-white/5">
+                        <div class="text-[10px] text-gray-400">میانگین</div>
+                        <div id="cf-avg" class="text-sm font-bold text-white mt-1" dir="ltr">--</div>
+                    </div>
+                    <div class="bg-[#161829] rounded-2xl p-3 border border-white/5">
+                        <div class="text-[10px] text-gray-400">بیشترین</div>
+                        <div id="cf-max" class="text-sm font-bold text-amber-400 mt-1" dir="ltr">--</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2.5 pt-1">
+                    <button id="cf-test-btn" onclick="startCloudflarePing(1)" class="tap-effect flex-1 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center justify-center gap-1.5">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        <span>تست سریع</span>
+                    </button>
+                    <button onclick="startCloudflarePing(5)" class="tap-effect px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-xs font-bold">
+                        تست ۵ مرحله‌ای
+                    </button>
+                </div>
+
+                <div id="cf-log" class="text-[11px] text-gray-400 bg-[#161829] rounded-2xl p-3 border border-white/5 min-h-[54px] leading-relaxed" dir="ltr">
+                    Ready to test Cloudflare ping...
+                </div>
+            </section>
+
+            <!-- توضیح افزوده شدن ابزارهای جدید -->
+            <section class="card-tips rounded-2xl p-4 flex items-start gap-3">
+                <div class="w-9 h-9 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white">اطلاعیه</h4>
+                    <p class="text-xs text-gray-300 mt-1 leading-relaxed">
+                        به‌زودی ابزارهای جدیدی در این قسمت افزوده خواهد شد.
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- لوگوی شناور تلگرام -->
+    <a href="https://t.me/Freenetvt"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="کانال تلگرام Freenetvt"
+       title="کانال تلگرام Freenetvt"
+       class="fab-telegram fixed bottom-24 left-4 z-50 w-12 h-12 rounded-full flex items-center justify-center text-white shadow-xl">
+        <svg class="w-6 h-6 -translate-x-[1px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M21.944 4.668a1.5 1.5 0 0 0-1.62-.252L3.24 11.01a1.5 1.5 0 0 0 .12 2.84l4.18 1.335 1.62 5.06a1.5 1.5 0 0 0 2.55.56l2.33-2.46 4.02 2.97a1.5 1.5 0 0 0 2.38-.92l2.9-13.9a1.5 1.5 0 0 0-1.406-1.877zM9.42 14.37l8.53-7.66-6.78 8.95-.26 3.12-1.49-4.41z"/>
+        </svg>
+    </a>
+
+    <!-- نوار ناوبری پایین -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#1b1e32]/95 backdrop-blur-md border-t border-white/5 px-4 py-2.5 flex items-center justify-around z-40">
+        <button onclick="goHome()" class="nav-btn flex flex-col items-center gap-1 text-purple-400">
+            <div class="px-4 py-1 rounded-full bg-purple-500/20"><i data-lucide="home" class="w-5 h-5 fill-purple-400"></i></div>
+            <span class="text-[11px] font-medium">خانه</span>
+        </button>
+        <button onclick="openToolsPage()" class="nav-btn flex flex-col items-center gap-1 text-gray-400">
+            <div class="px-4 py-1 rounded-full"><i data-lucide="wrench" class="w-5 h-5"></i></div>
+            <span class="text-[11px]">ابزارها</span>
+        </button>
+        <button onclick="openServerPage('FAV', 'علاقه‌مندی‌ها')" class="nav-btn flex flex-col items-center gap-1 text-gray-400">
+            <div class="px-4 py-1 rounded-full"><i data-lucide="heart" class="w-5 h-5"></i></div>
+            <span class="text-[11px]">علاقه‌مندی‌ها</span>
+        </button>
+        <button onclick="showToast('بخش تنظیمات')" class="nav-btn flex flex-col items-center gap-1 text-gray-400">
+            <div class="px-4 py-1 rounded-full"><i data-lucide="settings" class="w-5 h-5"></i></div>
+            <span class="text-[11px]">تنظیمات</span>
+        </button>
+    </nav>
+
+    <!-- اعلان شناور -->
+    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 bg-gray-800/95 text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-2xl border border-white/10 opacity-0 pointer-events-none transition-all duration-300 z-50"></div>
+
+    <script>
+        lucide.createIcons();
+
+        const CONFIG_SOURCES = ['./sub.txt'];
+
+        const SAMPLE_CONFIGS = `
+ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@193.29.139.147:8080#The+Netherlands
+ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@51.79.64.198:8119#Canada - Beauharnois
+ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@156.146.38.167:443#United+States - Dallas
+ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@193.29.139.212:8080#The+Netherlands
+ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@84.247.155.196:80#Germany
+ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@82.38.31.48:8080#United+Kingdom
+vless://550e8400-e29b-41d4-a716-446655440000@104.21.45.12:443?encryption=none&security=tls&type=ws&path=%2Fws#Germany-VLESS-01
+vmess://eyJhZGQiOiIxNzIuNjcuMTguOTAiLCJob3N0IjoiIiwiaWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJuZXQiOiJ3cyIsInBhdGgiOiIvIiwicG9ydCI6IjQ0MyIsInBzIjoiTmV0aGVybGFuZHMtVk1lc3MtMDIiLCJzY3kiOiJhdXRvIiwic25pIjoiIiwidGxzIjoidGxzIiwidHlwZSI6IiIsInYiOiIyIn0=
+trojan://password123@185.12.44.11:443?security=tls&type=tcp#Turkey-Trojan-03
+socks5://192.168.1.1:1080#US-Socks5
+http://45.12.33.10:8080#UK-HTTP
+        `.trim();
+
+        let allServers = [];
+        let activeList = [];
+        let onlyHealthyMode = false;
+        let favorites = JSON.parse(localStorage.getItem('shadowshare_favs') || '[]');
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2200);
+        }
+
+        async function copyToClipboard(text, successMsg = 'کپی شد') {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast(successMsg);
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast(successMsg);
+            }
+        }
+
+        function copySingle(encodedUri, name) {
+            copyToClipboard(decodeURIComponent(encodedUri), `کانفیگ ${name} کپی شد`);
+        }
+
+        function copyAllConfigs() {
+            if (!allServers.length) return showToast('سروری برای کپی وجود ندارد');
+            copyToClipboard(allServers.map(s => s.uri).join('\n'), `همه ${allServers.length} کانفیگ کپی شدند`);
+        }
+
+        function copyListConfigs() {
+            const list = onlyHealthyMode ? activeList.filter(s => typeof s.ping === 'number') : activeList;
+            if (!list.length) return showToast('کانفیگی برای کپی وجود ندارد');
+            copyToClipboard(list.map(s => s.uri).join('\n'), `${list.length} کانفیگ کپی شد`);
+        }
+
+        function copySubUrl() {
+            const subUrl = new URL('./sub.txt', window.location.href).href;
+            copyToClipboard(subUrl, 'لینک سابسکریپشن کپی شد');
+        }
+
+        function toggleFav(encodedUri) {
+            const uri = decodeURIComponent(encodedUri);
+            const idx = favorites.indexOf(uri);
+            if (idx > -1) {
+                favorites.splice(idx, 1);
+                showToast('از علاقه‌مندی‌ها حذف شد');
+            } else {
+                favorites.push(uri);
+                showToast('به علاقه‌مندی‌ها اضافه شد');
+            }
+            localStorage.setItem('shadowshare_favs', JSON.stringify(favorites));
+            updateCounts();
+            renderServersList();
+        }
+
+        async function fetchAndParseConfigs(btn = null) {
+            if (btn) btn.querySelector('svg').style.transform = 'rotate(360deg)';
+            let rawText = '';
+
+            for (const url of CONFIG_SOURCES) {
+                try {
+                    const res = await fetch(url + '?t=' + Date.now());
+                    if (res.ok) {
+                        let text = await res.text();
+                        if (!text.includes('://')) {
+                            try { text = atob(text.trim()); } catch (e) {}
+                        }
+                        rawText += '\n' + text;
+                    }
+                } catch (e) {}
+            }
+
+            if (!rawText.trim()) rawText = SAMPLE_CONFIGS;
+
+            parseLines(rawText);
+            updateCounts();
+
+            if (btn) {
+                setTimeout(() => btn.querySelector('svg').style.transform = 'rotate(0deg)', 500);
+                showToast('لیست سرورها به‌روزرسانی شد');
+            }
+        }
+
+        function parseLines(text) {
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.includes('://'));
+            allServers = lines.map((uri, idx) => {
+                const protocol = uri.split('://')[0].toLowerCase();
+                let name = `Server ${idx + 1}`;
+                let hostPort = 'unknown:443';
+
+                try {
+                    if (protocol === 'vmess') {
+                        const data = JSON.parse(atob(uri.replace('vmess://', '')));
+                        if (data.ps) name = data.ps;
+                        hostPort = `${data.add || 'host'}:${data.port || '443'}`;
+                    } else {
+                        const withoutHash = uri.split('#')[0];
+                        if (uri.includes('#')) {
+                            name = decodeURIComponent(uri.split('#')[1]);
+                        }
+                        const afterAt = withoutHash.includes('@')
+                            ? withoutHash.split('@')[1].split('?')[0].split('/')[0]
+                            : withoutHash.split('://')[1].split('?')[0].split('/')[0];
+                        if (afterAt) hostPort = afterAt;
+                    }
+                } catch (e) {}
+
+                return {
+                    id: idx + '_' + uri,
+                    uri,
+                    protocol,
+                    protocolLabel: formatProtocolLabel(protocol),
+                    name,
+                    hostPort,
+                    ping: null
+                };
+            });
+        }
+
+        function formatProtocolLabel(proto) {
+            const map = {
+                ss: 'Shadowsocks',
+                vmess: 'VMess',
+                vless: 'VLESS',
+                trojan: 'Trojan',
+                http: 'HTTP',
+                https: 'HTTPS',
+                socks4: 'SOCKS4',
+                socks5: 'SOCKS5'
+            };
+            return map[proto] || proto.toUpperCase();
+        }
+
+        function updateCounts() {
+            const counts = { vmess: 0, vless: 0, trojan: 0, ss: 0, http: 0, https: 0, socks4: 0, socks5: 0 };
+            allServers.forEach(s => {
+                if (counts[s.protocol] !== undefined) counts[s.protocol]++;
+            });
+
+            document.getElementById('total-count').textContent = allServers.length;
+            document.getElementById('secure-count').textContent = counts.vmess + counts.vless + counts.trojan + counts.ss;
+            document.getElementById('public-count').textContent = counts.http + counts.https + counts.socks4 + counts.socks5;
+            document.getElementById('fav-count').textContent = favorites.length;
+            document.getElementById('last-update').textContent = 'right now';
+
+            Object.keys(counts).forEach(k => {
+                const el = document.getElementById(`badge-${k}`);
+                if (el) el.textContent = counts[k];
+            });
+        }
+
+        function goHome() {
+            document.getElementById('servers-view').classList.add('hidden');
+            document.getElementById('tools-view').classList.add('hidden');
+            document.getElementById('home-view').classList.remove('hidden');
+            updateCounts();
+        }
+
+        function openServerPage(filter, title) {
+            onlyHealthyMode = false;
+            document.getElementById('ping-summary-bar').classList.add('hidden');
+            document.getElementById('filter-healthy-btn').classList.remove('bg-emerald-500', 'text-gray-950');
+            document.getElementById('filter-healthy-btn').classList.add('bg-emerald-500/20', 'text-emerald-300');
+
+            if (filter === 'ALL') {
+                activeList = [...allServers];
+            } else if (filter === 'SECURE') {
+                activeList = allServers.filter(s => ['vmess', 'vless', 'trojan', 'ss'].includes(s.protocol));
+            } else if (filter === 'PUBLIC') {
+                activeList = allServers.filter(s => ['http', 'https', 'socks4', 'socks5'].includes(s.protocol));
+            } else if (filter === 'FAV') {
+                activeList = allServers.filter(s => favorites.includes(s.uri));
+            } else {
+                activeList = allServers.filter(s => s.protocol === filter);
+            }
+
+            document.getElementById('page-servers-title').textContent = title;
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('tools-view').classList.add('hidden');
+            document.getElementById('servers-view').classList.remove('hidden');
+            window.scrollTo(0, 0);
+
+            renderServersList();
+        }
+
+        function closeServerPage() {
+            goHome();
+        }
+
+        function openToolsPage() {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('servers-view').classList.add('hidden');
+            document.getElementById('tools-view').classList.remove('hidden');
+            window.scrollTo(0, 0);
+            lucide.createIcons();
+        }
+
+        function closeToolsPage() {
+            goHome();
+        }
+
+        function renderServersList() {
+            const wrapper = document.getElementById('servers-list-wrapper');
+            const listToShow = onlyHealthyMode
+                ? activeList.filter(s => typeof s.ping === 'number')
+                : activeList;
+
+            document.getElementById('page-servers-sub').textContent = `${listToShow.length} سرور`;
+            wrapper.innerHTML = '';
+
+            if (listToShow.length === 0) {
+                wrapper.innerHTML = `<div class="text-center text-gray-400 text-xs py-14">سروری برای نمایش وجود ندارد.</div>`;
+                return;
+            }
+
+            listToShow.forEach(srv => {
+                const isFav = favorites.includes(srv.uri);
+
+                let pingBadgeHtml = '';
+                if (srv.ping === 'testing') {
+                    pingBadgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/20 text-blue-300">در حال تست...</span>`;
+                } else if (typeof srv.ping === 'number') {
+                    const colorClass = srv.ping < 250
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-amber-500/20 text-amber-400';
+                    pingBadgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${colorClass}" dir="ltr">${srv.ping}ms</span>`;
+                } else if (srv.ping === false) {
+                    pingBadgeHtml = `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-500/20 text-rose-400">زمان پایان</span>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'server-card rounded-2xl p-4 flex items-center justify-between gap-3';
+                card.innerHTML = `
+                    <div onclick="copySingle('${encodeURIComponent(srv.uri)}', '${escapeHtml(srv.name)}')" class="flex-1 min-w-0 cursor-pointer space-y-1">
+                        <div class="text-sm font-bold text-white truncate" dir="ltr">${escapeHtml(srv.name)}</div>
+                        <div class="text-xs text-gray-400 font-mono truncate" dir="ltr">${escapeHtml(srv.hostPort)}</div>
+                        <div class="flex items-center gap-2 pt-0.5">
+                            ${pingBadgeHtml}
+                            <span class="text-xs text-gray-400" dir="ltr">${srv.protocolLabel}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="toggleFav('${encodeURIComponent(srv.uri)}')" title="علاقه‌مندی" class="tap-effect w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center ${isFav ? 'text-amber-400' : 'text-gray-400'}">
+                            <i data-lucide="star" class="w-4 h-4 ${isFav ? 'fill-amber-400' : ''}"></i>
+                        </button>
+                        <button onclick="copySingle('${encodeURIComponent(srv.uri)}', '${escapeHtml(srv.name)}')" title="کپی" class="tap-effect w-9 h-9 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                wrapper.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        async function measureSingleHost(hostPort, timeoutMs = 2500) {
+            const parts = hostPort.split(':');
+            const host = parts[0];
+            const port = parts[1] || '443';
+            if (!host || host === 'host' || host === 'unknown') return false;
+
+            const start = performance.now();
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                await fetch(`https://${host}:${port}/?ping=${Date.now()}`, {
+                    mode: 'no-cors',
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                clearTimeout(timer);
+                return Math.max(15, Math.round(performance.now() - start));
+            } catch (e) {
+                clearTimeout(timer);
+                return false;
+            }
+        }
+
+        async function runPingTest() {
+            if (!activeList.length) return showToast('سروری برای تست وجود ندارد');
+
+            const bar = document.getElementById('ping-summary-bar');
+            const statusText = document.getElementById('ping-status-text');
+            const btn = document.getElementById('ping-all-btn');
+
+            bar.classList.remove('hidden');
+            btn.disabled = true;
+            btn.classList.add('opacity-60');
+
+            activeList.forEach(s => { s.ping = 'testing'; });
+            renderServersList();
+
+            let completed = 0;
+            let healthy = 0;
+
+            const concurrency = 4;
+            let index = 0;
+
+            async function worker() {
+                while (index < activeList.length) {
+                    const srv = activeList[index++];
+                    const res = await measureSingleHost(srv.hostPort, 2200);
+                    srv.ping = res;
+                    completed++;
+                    if (typeof res === 'number') healthy++;
+                    statusText.textContent = `تست شده: ${completed} از ${activeList.length} (سالم: ${healthy})`;
+                    renderServersList();
+                }
+            }
+
+            await Promise.all(Array.from({ length: Math.min(concurrency, activeList.length) }, worker));
+
+            activeList.sort((a, b) => {
+                if (typeof a.ping === 'number' && typeof b.ping === 'number') return a.ping - b.ping;
+                if (typeof a.ping === 'number') return -1;
+                if (typeof b.ping === 'number') return 1;
+                return 0;
+            });
+
+            renderServersList();
+            statusText.textContent = `پایان تست: ${healthy} سرور سالم از ${activeList.length}`;
+            btn.disabled = false;
+            btn.classList.remove('opacity-60');
+        }
+
+        function toggleOnlyHealthy() {
+            onlyHealthyMode = !onlyHealthyMode;
+            const btn = document.getElementById('filter-healthy-btn');
+            if (onlyHealthyMode) {
+                btn.classList.remove('bg-emerald-500/20', 'text-emerald-300');
+                btn.classList.add('bg-emerald-500', 'text-gray-950');
+            } else {
+                btn.classList.remove('bg-emerald-500', 'text-gray-950');
+                btn.classList.add('bg-emerald-500/20', 'text-emerald-300');
+            }
+            renderServersList();
+        }
+
+        async function startCloudflarePing(rounds = 1) {
+            const btn = document.getElementById('cf-test-btn');
+            const badge = document.getElementById('cf-ping-badge');
+            const logEl = document.getElementById('cf-log');
+            const minEl = document.getElementById('cf-min');
+            const avgEl = document.getElementById('cf-avg');
+            const maxEl = document.getElementById('cf-max');
+
+            btn.disabled = true;
+            btn.classList.add('opacity-60');
+            logEl.textContent = 'Testing Cloudflare edge latency...';
+
+            const results = [];
+
+            for (let i = 1; i <= rounds; i++) {
+                const start = performance.now();
+                try {
+                    await fetch(`https://1.1.1.1/cdn-cgi/trace?r=${Date.now()}_${i}`, {
+                        mode: 'no-cors',
+                        cache: 'no-store'
+                    });
+                    const ms = Math.max(10, Math.round(performance.now() - start));
+                    results.push(ms);
+                    badge.textContent = `${ms} ms`;
+                    logEl.textContent += `\n#${i}: ${ms} ms`;
+                } catch (e) {
+                    logEl.textContent += `\n#${i}: timeout / blocked`;
+                }
+            }
+
+            if (results.length > 0) {
+                const min = Math.min(...results);
+                const max = Math.max(...results);
+                const avg = Math.round(results.reduce((a, b) => a + b, 0) / results.length);
+                minEl.textContent = `${min} ms`;
+                avgEl.textContent = `${avg} ms`;
+                maxEl.textContent = `${max} ms`;
+                badge.textContent = `${avg} ms`;
+            }
+
+            btn.disabled = false;
+            btn.classList.remove('opacity-60');
+        }
+
+        fetchAndParseConfigs();
+    </script>
+</body>
+</html>
