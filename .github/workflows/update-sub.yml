@@ -45,6 +45,14 @@ jobs:
               "https://t.me/Masir_Sefid",
               "https://t.me/configraygan",
               "https://t.me/ettehad_vpn",
+              "https://t.me/flyv2ray",
+              "https://t.me/v2rayNG_Matsuri",
+              "https://t.me/ffreecoffee",
+              "https://t.me/v2FreeHub",
+              "https://v2freehub-sub.v2freehub.workers.dev/",
+              "https://t.me/free1_vpn",
+              "https://t.me/persianvpnhub",
+              "https://t.me/DailyCfg",
           ]
 
           SOURCES = list(dict.fromkeys(RAW_LINKS))
@@ -132,7 +140,7 @@ jobs:
 
                       matches = re.findall(r"(?:vmess|vless|trojan|ss|ssr|http|https|socks4|socks5)://[^\s<>\"\\]+", content)
                       for line in matches:
-                          line = line.strip()
+                          line = line.strip().rstrip(".,;:")
                           if line.startswith(protocols):
                               tagged = tag_config(line)
                               unique_configs[tagged] = tagged
