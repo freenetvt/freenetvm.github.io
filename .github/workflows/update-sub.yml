@@ -140,7 +140,7 @@ jobs:
 
                       matches = re.findall(r"(?:vmess|vless|trojan|ss|ssr|http|https|socks4|socks5)://[^\s<>\"\\]+", content)
                       for line in matches:
-                          line = line.strip().rstrip(".,;:")
+                          line = line.strip()
                           if line.startswith(protocols):
                               tagged = tag_config(line)
                               unique_configs[tagged] = tagged
